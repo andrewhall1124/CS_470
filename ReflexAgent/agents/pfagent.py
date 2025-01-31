@@ -9,6 +9,7 @@ class PFAgent(Agent):
         self.alpha = 1
         self.beta = 1
         self.gamma = 1
+        self.delta = .01
         self.threshold = 5
 
     def act(self, robot_pos, goal_pos, dist_sensors):
@@ -32,8 +33,9 @@ class PFAgent(Agent):
         attractive_field = self._attractive_field(theta)
         repulsive_field = self._repulsive_field(dist_sensors, thetas)
         tangential_field = self._tangential_field(dist_sensors, thetas)
+        random_field = self._random_field()
         
-        return self.alpha * attractive_field + self.beta * repulsive_field + self.gamma * tangential_field
+        return self.alpha * attractive_field + self.beta * repulsive_field + self.gamma * tangential_field + self.delta * random_field
 
     def _attractive_field(self, theta):
         delta_x = math.cos(theta)
@@ -60,3 +62,7 @@ class PFAgent(Agent):
         R = np.array([[0,-1],[1,0]])
 
         return R @ np.array([dx, dy])
+    
+    def _random_field(self):
+        random_dir = np.random.uniform(-1, 1, size=2)
+        return random_dir / np.linalg.norm(random_dir, ord=2)
