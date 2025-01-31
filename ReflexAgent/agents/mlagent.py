@@ -17,8 +17,7 @@ class MLAgent(Agent):
         model_path = './models/agent_mdl.pkl'
         load_success = self.load(model_path)
         if not load_success:
-            # TODO: generate your own data
-            df = pd.read_csv(f'./data/robot_recording_sample.csv')
+            df = pd.read_csv(f'./data/master.csv')
 
             # Here is an example of feature engineering
             # This creates features to encode the robots rotation in radians and as well as in an xy heading format
@@ -55,7 +54,7 @@ class MLAgent(Agent):
             Y = df[labels].to_numpy().flatten()
 
             # TODO: try different ml models with different parameters see the README for more info
-            self.model = KNeighborsClassifier(n_neighbors=2, weights='distance')
+            self.model = KNeighborsClassifier(n_neighbors=20, weights='uniform')
 
             self.train(X, Y)
 
