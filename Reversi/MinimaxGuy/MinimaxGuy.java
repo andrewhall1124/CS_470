@@ -59,7 +59,7 @@ class MinimaxGuy {
 
             int[][] newState = copyBoard(state);
             applyMove(newState, row, col, me);
-            int score = minimax(newState, 3, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            int score = minimax(newState, 5, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
             if (score > bestScore) {
                 bestScore = score;
                 bestMove = i;
@@ -162,7 +162,7 @@ class MinimaxGuy {
         int[][] weights;
 
         // Keep control of the middle.
-        int[][] earlyWeights = { //earlyWeights
+        int[][] primaryWeights = {
             {1, 1, 1, 1, 1, 1, 1, 1},
             {1, 1, 1, 1, 1, 1, 1, 1},
             {1, 1, 10, 10, 10, 10, 1, 1},
@@ -174,37 +174,22 @@ class MinimaxGuy {
         };
         
         // Capture the edges
-        int[][] midWeights = {
+        int[][] secondaryWeights = {
             {100, 10, 10, 10, 10, 10, 10, 100},
             {10, 1, 1, 1, 1, 1, 1, 10},
             {10, 1, 1, 1, 1, 1, 1, 10},
-            {10, 1, 1, 1, 1, 1, 1, 10},
-            {10, 1, 1, 1, 1, 1, 1, 10},
+            {10, 1, 1, 10, 10, 1, 1, 10},
+            {10, 1, 1, 10, 10, 1, 1, 10},
             {10, 1,1, 1, 1, 1, 1, 10},
             {10, 1, 1, 1, 1, 1, 1, 10},
             {100, 10, 10, 10, 10, 10, 10, 100},
         };
-        
-        // Maximize flips
-        int[][] lateWeights = {
-            {100, 1, 3, 3, 3, 3, 1, 100},
-            {1, 1, 1, 1, 1, 1, 1, 1},
-            {3, 1, 1, 1, 1, 1, 1, 3},
-            {3, 1, 1, 2, 2, 1, 1, 3},
-            {3, 1, 1, 2, 2, 1, 1, 3},
-            {3, 1,1, 1, 1, 1, 1, 3},
-            {1, 1, 1, 1, 1, 1, 1, 1},
-            {100, 1, 3, 3, 3, 3, 1, 100},
-        };
 
         if(round < 24){
-            weights = earlyWeights;
-        }
-        else if(round < 54){
-            weights = midWeights;
+            weights = primaryWeights;
         }
         else{
-            weights = lateWeights;
+            weights = secondaryWeights;
         }
 
         int myScore = 0, opponentScore = 0;
