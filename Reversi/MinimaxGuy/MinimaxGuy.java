@@ -50,10 +50,152 @@ class MinimaxGuy {
     // validMoves is a list of valid locations that you could place your "stone" on this turn
     // Note that "state" is a global variable 2D list that shows the state of the game
     private int move() {
-        // just move randomly for now
-        int myMove = generator.nextInt(numValidMoves);
+        int bestMove = -1;
+        int bestScore = Integer.MIN_VALUE;
+
+        for (int i = 0; i < numValidMoves; i++) {
+            int row = validMoves[i] / 8;
+            int col = validMoves[i] % 8;
+
+            int[][] newState = copyBoard(state);
+            applyMove(newState, row, col, me);
+            int score = minimax(newState, 3, false, Integer.MIN_VALUE, Integer.MAX_VALUE);
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = i;
+            }
+        }
         
-        return myMove;
+        return bestMove;
+    }
+
+    // Copies the board to avoid modifying the original state
+    private int[][] copyBoard(int[][] board) {
+        int[][] newBoard = new int[8][8];
+        for (int i = 0; i < 8; i++) {
+            System.arraycopy(board[i], 0, newBoard[i], 0, 8);
+        }
+        return newBoard;
+    }
+
+    // Simulates applying a move
+    private void applyMove(int[][] board, int row, int col, int player) {
+        board[row][col] = player;
+        int opponent = (player == 1) ? 2 : 1;
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if (dx == 0 && dy == 0) continue;
+                int r = row + dy, c = col + dx;
+                boolean foundOpponent = false;
+
+                while (r >= 0 && r < 8 && c >= 0 && c < 8 && board[r][c] == opponent) {
+                    foundOpponent = true;
+                    r += dy;
+                    c += dx;
+                }
+
+                if (foundOpponent && r >= 0 && r < 8 && c >= 0 && c < 8 && board[r][c] == player) {
+                    r = row + dy;
+                    c = col + dx;
+                    while (board[r][c] == opponent) {
+                        board[r][c] = player;
+                        r += dy;
+                        c += dx;
+                    }
+                }
+            }
+        }
+    }
+
+    // Minimax with Alpha-Beta Pruning
+    private int minimax(int[][] board, int depth, boolean maximizingPlayer, int alpha, int beta) {
+        if (depth == 0) {
+            return evaluateBoard(board);
+        }
+
+        List<Integer> moves = getAvailableMoves(board, maximizingPlayer ? me : (me == 1 ? 2 : 1));
+
+        if (moves.isEmpty()) {
+            return evaluateBoard(board);
+        }
+
+        if (maximizingPlayer) {
+            int maxEval = Integer.MIN_VALUE;
+            for (int move : moves) {
+                int row = move / 8;
+                int col = move % 8;
+                int[][] newState = copyBoard(board);
+                applyMove(newState, row, col, me);
+
+                int eval = minimax(newState, depth - 1, false, alpha, beta);
+                maxEval = Math.max(maxEval, eval);
+                alpha = Math.max(alpha, eval);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+            return maxEval;
+        } else {
+            int minEval = Integer.MAX_VALUE;
+            int opponent = (me == 1) ? 2 : 1;
+            for (int move : moves) {
+                int row = move / 8;
+                int col = move % 8;
+                int[][] newState = copyBoard(board);
+                applyMove(newState, row, col, opponent);
+
+                int eval = minimax(newState, depth - 1, true, alpha, beta);
+                minEval = Math.min(minEval, eval);
+                beta = Math.min(beta, eval);
+                if (beta <= alpha) {
+                    break;
+                }
+            }
+            return minEval;
+        }
+    }
+
+    // Evaluates the board state
+    private int evaluateBoard(int[][] board) {
+        // Weight positions (corner > edge > center)
+        int[][] weights = {
+            {100, -10, 10, 5, 5, 10, -10, 100},
+            {-10, -20, 1, 1, 1, 1, -20, -10},
+            {10, 1, 5, 2, 2, 5, 1, 10},
+            {5, 1, 2, 1, 1, 2, 1, 5},
+            {5, 1, 2, 1, 1, 2, 1, 5},
+            {10, 1, 5, 2, 2, 5, 1, 10},
+            {-10, -20, 1, 1, 1, 1, -20, -10},
+            {100, -10, 10, 5, 5, 10, -10, 100}
+        };
+
+        int myScore = 0, opponentScore = 0;
+        int opponent = (me == 1) ? 2 : 1;
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j] == me) {
+                    myScore += weights[i][j];
+                } else if (board[i][j] == opponent) {
+                    opponentScore += weights[i][j];
+                }
+            }
+        }
+        return myScore - opponentScore;
+    }
+
+    // Gets a list of available moves for a given player
+    private List<Integer> getAvailableMoves(int[][] board, int player) {
+        List<Integer> moves = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j] == 0 && couldBe(board, i, j)) {
+                    moves.add(i * 8 + j);
+                }
+            }
+        }
+        return moves;
     }
     
     private void getValidMoves(int round, int state[][]) {
