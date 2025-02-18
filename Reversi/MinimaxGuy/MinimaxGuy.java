@@ -158,17 +158,54 @@ class MinimaxGuy {
 
     // Evaluates the board state
     private int evaluateBoard(int[][] board) {
-        // Weight positions (corner > edge > center)
-        int[][] weights = {
-            {100, -10, 10, 5, 5, 10, -10, 100},
-            {-10, -20, 1, 1, 1, 1, -20, -10},
-            {10, 1, 5, 2, 2, 5, 1, 10},
-            {5, 1, 2, 1, 1, 2, 1, 5},
-            {5, 1, 2, 1, 1, 2, 1, 5},
-            {10, 1, 5, 2, 2, 5, 1, 10},
-            {-10, -20, 1, 1, 1, 1, -20, -10},
-            {100, -10, 10, 5, 5, 10, -10, 100}
+        // Weight matrices for different phases of the game
+        int[][] weights;
+
+        // Keep control of the middle.
+        int[][] earlyWeights = { //earlyWeights
+            {1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 10, 10, 10, 10, 1, 1},
+            {1, 1, 10, 100, 100, 10, 1, 1},
+            {1, 1, 10, 100, 100, 10, 1, 1},
+            {1, 1, 10, 10, 10, 10, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1},
         };
+        
+        // Capture the edges
+        int[][] midWeights = {
+            {100, 10, 10, 10, 10, 10, 10, 100},
+            {10, 1, 1, 1, 1, 1, 1, 10},
+            {10, 1, 1, 1, 1, 1, 1, 10},
+            {10, 1, 1, 1, 1, 1, 1, 10},
+            {10, 1, 1, 1, 1, 1, 1, 10},
+            {10, 1,1, 1, 1, 1, 1, 10},
+            {10, 1, 1, 1, 1, 1, 1, 10},
+            {100, 10, 10, 10, 10, 10, 10, 100},
+        };
+        
+        // Maximize flips
+        int[][] lateWeights = {
+            {100, 1, 3, 3, 3, 3, 1, 100},
+            {1, 1, 1, 1, 1, 1, 1, 1},
+            {3, 1, 1, 1, 1, 1, 1, 3},
+            {3, 1, 1, 2, 2, 1, 1, 3},
+            {3, 1, 1, 2, 2, 1, 1, 3},
+            {3, 1,1, 1, 1, 1, 1, 3},
+            {1, 1, 1, 1, 1, 1, 1, 1},
+            {100, 1, 3, 3, 3, 3, 1, 100},
+        };
+
+        if(round < 24){
+            weights = earlyWeights;
+        }
+        else if(round < 54){
+            weights = midWeights;
+        }
+        else{
+            weights = lateWeights;
+        }
 
         int myScore = 0, opponentScore = 0;
         int opponent = (me == 1) ? 2 : 1;
