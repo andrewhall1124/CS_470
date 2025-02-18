@@ -1,10 +1,7 @@
 
-import javax.swing.*;
-import java.awt.event.*;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.lang.*;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.io.*;
@@ -24,7 +21,6 @@ class MyCanvas extends JComponent {
     int winner;
     
     public MyCanvas(int w, int h) {
-        //System.out.println("MyCanvas");
         width = w;
         height = h;
         
@@ -52,9 +48,7 @@ class MyCanvas extends JComponent {
         t1 = nt1;
         t2 = nt2;
         winner = nwinner;
-        
-        //System.out.println("should repaint");
-        
+                
         repaint();
     }
 
@@ -97,9 +91,7 @@ class MyCanvas extends JComponent {
     }
 
     
-    public void paint(Graphics g) {
-        //System.out.println("here");
-        
+    public void paint(Graphics g) {        
         Color turquois = new Color(30, 200, 200);
         Color myDarkGray = new Color(100, 100, 100);
         
@@ -141,9 +133,6 @@ class MyCanvas extends JComponent {
                     y = 34 + 6 + sqrHght * (7-i);
                     g.fillOval(x, y, sqrWdth-12, sqrHght-12);
 
-                    //g.setColor(bkgroundColor);
-                    //g.drawOval(x, y, sqrWdth-8, sqrHght-8);
-
                 }
             }
         }
@@ -170,20 +159,17 @@ class MyCanvas extends JComponent {
         
         int min = (int)(t1 / 60);
         int sec = (int)(t1+0.5) % 60;
-        int mili = (int)(t1 - (min*60 + sec)) * 100;
-        String minStr, secStr, miliStr;
+        String minStr;
         if (min < 10)
             minStr = "0" + min;
         else
             minStr = "" + min;
+
+        String secStr;
         if (sec < 10)
             secStr = "0" + sec;
         else
             secStr = "" + sec;
-        if (mili < 10)
-            miliStr = "0" + mili;
-        else
-            miliStr = "" + mili;
         
         String t1Str = minStr + ":" + secStr;
         g.drawString(t1Str, xanchor + 180, height - 58);
@@ -204,7 +190,6 @@ class MyCanvas extends JComponent {
         
         min = (int)(t2 / 60);
         sec = (int)(t2+0.5) % 60;
-        mili = (int)(t2 - (min*60 + sec)) * 100;
         if (min < 10)
             minStr = "0" + min;
         else
@@ -213,10 +198,6 @@ class MyCanvas extends JComponent {
             secStr = "0" + sec;
         else
             secStr = "" + sec;
-        if (mili < 10)
-            miliStr = "0" + mili;
-        else
-            miliStr = "" + mili;
         
         String t2Str = minStr + ":" + secStr;
         g.drawString(t2Str, xanchor + 180, height - 32);
@@ -405,11 +386,9 @@ public class Reversi extends JFrame {
         int nocount = 0;
         long sTime, eTime;
         while (true) {
-            //System.out.println("Round: " + round);
             prnt.println("\nRound: " + round);
             printState();
             
-            //System.out.println("Game isn't over yet.");
             
             sTime = System.nanoTime();
             
@@ -467,7 +446,6 @@ public class Reversi extends JFrame {
             System.out.println("\nBlack: " + t1 + "\nWhite: " + t2);
             
             if (mueva[0] != -1) {
-                //System.out.println("Move: " + mueva[0] + ", " + mueva[1]);
                 prnt.println("Player " + (turn+1) + ": " + mueva[0] + ", " + mueva[1]);
                 
                 state[mueva[0]][mueva[1]] = turn+1;
@@ -540,7 +518,6 @@ public class Reversi extends JFrame {
             }
         }
         
-        // declare the winner and update all information
         if (t1 <= 0.0) {
             winner = 2;
             t1 = 0.0;
@@ -570,7 +547,6 @@ public class Reversi extends JFrame {
             else if (countWhite > countBlack)
                 winner = 2;
 
-            // give empty squares to the winner
             for (i = 0; i < 8; i++) {
                 for (j = 0; j < 8; j++) {
                     if (state[i][j] == 0) {

@@ -2,7 +2,7 @@ import java.util.*;
 import java.io.*;
 import java.net.*;
 
-class RandomGuy {
+class MinimaxGuy {
 
     public Socket s;
 	public BufferedReader sin;
@@ -21,7 +21,7 @@ class RandomGuy {
     
     
     // main function that (1) establishes a connection with the server, and then plays whenever it is this player's turn
-    public RandomGuy(int _me, String host) {
+    public MinimaxGuy(int _me, String host) {
         me = _me;
         initClient(host);
 
@@ -46,8 +46,13 @@ class RandomGuy {
         }
     }
     
+    // You should modify this function
+    // validMoves is a list of valid locations that you could place your "stone" on this turn
+    // Note that "state" is a global variable 2D list that shows the state of the game
     private int move() {
+        // just move randomly for now
         int myMove = generator.nextInt(numValidMoves);
+        
         return myMove;
     }
     

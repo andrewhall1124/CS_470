@@ -1,12 +1,5 @@
-import java.awt.*;
-import java.util.*;
-import java.awt.event.*;
-import java.lang.*;
 import java.io.*;
 import java.net.*;
-import javax.swing.*;
-import java.math.*;
-import java.text.*;
 
 public class Player {
     int me;
@@ -22,7 +15,6 @@ public class Player {
     Player(int _me, int minutos) {
         me = _me;
 
-        // get a connection
         getConnection(thePort+me, minutos);
     }
     
@@ -64,31 +56,19 @@ public class Player {
                 validMoves[numValidMoves] = 4*8 + 4;
                 numValidMoves ++;
             }
-            //System.out.println("Valid Moves:");
-            //for (i = 0; i < numValidMoves; i++) {
-            //    System.out.println(validMoves[i] / 8 + ", " + validMoves[i] % 8);
-            //}
         }
         else {
-            //System.out.println("Valid Moves:");
             for (i = 0; i < 8; i++) {
                 for (j = 0; j < 8; j++) {
                     if (state[i][j] == 0) {
                         if (couldBe(state, i, j)) {
                             validMoves[numValidMoves] = i*8 + j;
                             numValidMoves ++;
-                            //System.out.println(i + ", " + j);
                         }
                     }
                 }
             }
         }
-        
-        
-        //if (round > 3) {
-        //    System.out.println("checking out");
-        //    System.exit(1);
-        //}
     }
     
     private boolean checkDirection(int state[][], int row, int col, int incx, int incy) {
@@ -151,7 +131,6 @@ public class Player {
     
     
     public int[] takeTurn(int round, int state[][], double t1, double t2, PrintWriter prnt) {
-        // first, check to see if this player has any valid moves
         getValidMoves(round, state);
         
         int i, j;
@@ -164,17 +143,13 @@ public class Player {
         if (numValidMoves == 0) {
             int mueva[] = new int[2];
             mueva[0] = mueva[1] = -1;
-        
-            //System.out.println("Player " + me + " has no valid moves");
             
             return mueva;
         }
     
-        //System.out.println("Turn for " + me + "; Round " + round);
     
         int mueva[] = new int[2];
         try {
-            // tell the player the world state
             boolean valid = false;
             int row = -1, col = -1;
             while (!valid) {
@@ -186,11 +161,9 @@ public class Player {
                 }
                 sout.println(status);
                 
-                // receive the players move
                 row = Integer.parseInt(sin.readLine());
                 col = Integer.parseInt(sin.readLine());
                 
-                // check to see whether the move is a valid move
                 for (i = 0; i < numValidMoves; i++) {
                     if ((row == (validMoves[i] / 8)) && (col == (validMoves[i] % 8))) {
                         valid = true;
@@ -199,7 +172,6 @@ public class Player {
                 }
             }
             
-            // return the move
             mueva[0] = row;
             mueva[1] = col;
         } catch (IOException e) {
