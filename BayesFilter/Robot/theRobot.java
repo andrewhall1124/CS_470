@@ -1,15 +1,10 @@
 
-import javax.swing.*;
 import java.awt.event.*;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
-import java.lang.*;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.io.*;
-import java.util.Random;
-import java.util.Scanner;
 import java.net.*;
 
 
@@ -150,9 +145,7 @@ class mySmartMap extends JComponent implements KeyListener {
     }
     
     public void paintValues(Graphics g) {
-        double maxVal = -99999, minVal = 99999;
-        int mx = 0, my = 0;
-        
+        double maxVal = -99999, minVal = 99999;        
         for (int y = 0; y < mundo.height; y++) {
             for (int x = 0; x < mundo.width; x++) {
                 if (mundo.grid[x][y] != 0)
@@ -473,6 +466,6 @@ public class theRobot extends JFrame {
 
     // java theRobot [manual/automatic] [delay]
     public static void main(String[] args) {
-        theRobot robot = new theRobot(args[0], Integer.parseInt(args[1]));  // starts up the robot
+        new theRobot(args[0], Integer.parseInt(args[1]));
     }
 }

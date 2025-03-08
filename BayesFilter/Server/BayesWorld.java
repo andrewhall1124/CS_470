@@ -1,10 +1,6 @@
 
-import javax.swing.*;
-import java.awt.event.*;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
-import java.lang.*;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import java.io.*;
@@ -309,6 +305,6 @@ public class BayesWorld extends JFrame {
     }
 
     public static void main(String[] args) {
-        BayesWorld bw = new BayesWorld(args[0], Double.parseDouble(args[1]), Double.parseDouble(args[2]), args[3]);
+        new BayesWorld(args[0], Double.parseDouble(args[1]), Double.parseDouble(args[2]), args[3]);
     }
 }
