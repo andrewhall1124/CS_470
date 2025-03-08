@@ -394,16 +394,119 @@ public class theRobot extends JFrame {
         
         myMaps.updateProbs(probs);
     }
+
+    public static void printArray(double[][] arr) {
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = 0; j < arr[i].length; j++) {
+                System.out.print(arr[i][j] + " ");
+            }
+            System.out.println(); // New line after each row
+        }
+    }
     
     // TODO: update the probabilities of where the AI thinks it is based on the action selected and the new sonar readings
     //       To do this, you should update the 2D-array "probs"
     // Note: sonars is a bit string with four characters, specifying the sonar reading in the direction of North, South, East, and West
     //       For example, the sonar string 1001, specifies that the sonars found a wall in the North and West directions, but not in the South and East directions
     void updateProbabilities(int action, String sonars) {
-        // your code
-
-        myMaps.updateProbs(probs); // call this function after updating your probabilities so that the
-                                   //  new probabilities will show up in the probability map on the GUI
+        double[][] newProbs = new double[mundo.width][mundo.height];
+    
+        int dx = 0, dy = 0;
+        switch(action) {
+            case NORTH: dy = -1; break;
+            case SOUTH: dy = 1;  break;
+            case EAST:  dx = 1;  break;
+            case WEST:  dx = -1; break;
+            case STAY:  dx = 0;  dy = 0; break;
+        }
+        
+        // ----- Motion Update -----
+        // For every open cell in the current belief, propagate the probability.
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                // Only consider open spaces (where grid value is 0)
+                if (mundo.grid[x][y] != 0)
+                    continue;
+                double prob = probs[x][y];
+                if (prob == 0)
+                    continue;
+                
+                // Compute intended new location from (x, y)
+                int newX = x + dx;
+                int newY = y + dy;
+                // Check if the intended move is valid (within bounds and not a wall)
+                if (newX >= 0 && newX < mundo.width &&
+                    newY >= 0 && newY < mundo.height &&
+                    mundo.grid[newX][newY] == 0) {
+                    // With probability moveProb, the robot goes to (newX, newY)
+                    newProbs[newX][newY] += moveProb * prob;
+                    // With probability (1 - moveProb), it stays in (x, y)
+                    newProbs[x][y] += (1.0 - moveProb) * prob;
+                } else {
+                    // If the move is invalid, the robot stays in place with probability 1.
+                    newProbs[x][y] += prob;
+                }
+            }
+        }
+        
+        // ----- Sensor Update -----
+        // Sonars string order: index 0: North, 1: South, 2: East, 3: West.
+        // For each open cell, update its probability based on the sensor likelihood.
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (mundo.grid[x][y] != 0)
+                    continue;
+                
+                double sensorLikelihood = 1.0;
+                sensorLikelihood *= getSensorLikelihood(x, y-1, sonars.charAt(0)); // North
+                sensorLikelihood *= getSensorLikelihood(x, y+1, sonars.charAt(1)); // South
+                sensorLikelihood *= getSensorLikelihood(x+1, y, sonars.charAt(2)); // East
+                sensorLikelihood *= getSensorLikelihood(x-1, y, sonars.charAt(3)); // West
+                
+                newProbs[x][y] *= sensorLikelihood;
+            }
+        }
+        
+        // ----- Normalization -----
+        double sum = 0.0;
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (mundo.grid[x][y] != 0)
+                    continue;
+                sum += newProbs[x][y];
+            }
+        }
+        if (sum > 0) {
+            for (int x = 0; x < mundo.width; x++) {
+                for (int y = 0; y < mundo.height; y++) {
+                    if (mundo.grid[x][y] != 0)
+                        continue;
+                    newProbs[x][y] /= sum;
+                }
+            }
+        }
+        
+        probs = newProbs;
+        myMaps.updateProbs(probs);
+    }
+    
+    // Helper method: Given a cell (x, y) adjacent to the current cell and the corresponding sensor reading,
+    // return the probability of that reading according to our sensor model.
+    // If the cell is out-of-bounds or is a wall, we expect a wall ('1'); otherwise, we expect an open space ('0').
+    private double getSensorLikelihood(int x, int y, char sensorReading) {
+        char expected;
+        if (x < 0 || x >= mundo.width || y < 0 || y >= mundo.height || mundo.grid[x][y] == 1) {
+            expected = '1';
+        } else {
+            expected = '0';
+        }
+        
+        // If the sensor reading matches what we expect, return sensorAccuracy;
+        // otherwise, return (1 - sensorAccuracy).
+        if (sensorReading == expected)
+            return sensorAccuracy;
+        else
+            return 1.0 - sensorAccuracy;
     }
     
     // This is the function you'd need to write to make the robot move using your AI;
