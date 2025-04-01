@@ -509,17 +509,180 @@ public class theRobot extends JFrame {
             return 1.0 - sensorAccuracy;
     }
     
-    // This is the function you'd need to write to make the robot move using your AI;
-    // You do NOT need to write this function for this lab; it can remain as is
-    int automaticAction() {
+    void valueIteration() {
+        final double DISCOUNT_FACTOR = 0.9;
+        final double CONVERGENCE_THRESHOLD = 0.001;
+        final int MAX_ITERATIONS = 100;
         
-        return STAY;  // default action for now
+        // Initialize the value function
+        Vs = new double[mundo.width][mundo.height];
+        // Initialize Q-values for each state-action pair
+        double[][][] Q = new double[mundo.width][mundo.height][5]; // 5 actions: NORTH, SOUTH, EAST, WEST, STAY
+        
+        // Initialize statePolicy to store the best action for each state
+        int[][] statePolicy = new int[mundo.width][mundo.height];
+        
+        // Reward values
+        final double REWARD_GOAL = 100.0;    // Goal state reward
+        final double REWARD_FALL = -100.0;   // Falling down stairs penalty
+        final double REWARD_STEP = -1.0;     // Cost of a step (to encourage shorter paths)
+        
+        // Value iteration
+        int iterations = 0;
+        double maxDelta;
+        do {
+            maxDelta = 0.0;
+            
+            // For each state
+            for (int x = 0; x < mundo.width; x++) {
+                for (int y = 0; y < mundo.height; y++) {
+                    // Skip walls
+                    if (mundo.grid[x][y] == 1)
+                        continue;
+                    
+                    double oldValue = Vs[x][y];
+                    
+                    // For goal and pit states, values are fixed
+                    if (mundo.grid[x][y] == 3) { // Goal state
+                        Vs[x][y] = REWARD_GOAL;
+                        continue;
+                    } else if (mundo.grid[x][y] == 2) { // Pit state
+                        Vs[x][y] = REWARD_FALL;
+                        continue;
+                    }
+                    
+                    // Calculate Q-values for each action
+                    double maxQ = Double.NEGATIVE_INFINITY;
+                    int bestAction = STAY;
+                    
+                    for (int action = 0; action < 5; action++) {
+                        Q[x][y][action] = calculateQ(x, y, action, Vs, REWARD_STEP, DISCOUNT_FACTOR);
+                        if (Q[x][y][action] > maxQ) {
+                            maxQ = Q[x][y][action];
+                            bestAction = action;
+                        }
+                    }
+                    
+                    // Update the value with the best Q-value
+                    Vs[x][y] = maxQ;
+                    statePolicy[x][y] = bestAction;
+                    
+                    // Update the maximum delta
+                    double delta = Math.abs(Vs[x][y] - oldValue);
+                    if (delta > maxDelta) {
+                        maxDelta = delta;
+                    }
+                }
+            }
+            
+            iterations++;
+        } while (maxDelta > CONVERGENCE_THRESHOLD && iterations < MAX_ITERATIONS);
+        
+        System.out.println("Value iteration converged after " + iterations + " iterations.");
+        
+        // Update the value map display
+        myMaps.updateValues(Vs);
+    }
+
+    // Calculate the Q-value for a state-action pair
+    double calculateQ(int x, int y, int action, double[][] values, double stepCost, double discountFactor) {
+        // Get the intended direction based on the action
+        int dx = 0, dy = 0;
+        switch (action) {
+            case NORTH: dy = -1; break;
+            case SOUTH: dy = 1;  break;
+            case EAST:  dx = 1;  break;
+            case WEST:  dx = -1; break;
+            case STAY:  dx = 0; dy = 0; break;
+        }
+        
+        // Calculate the next state
+        int nx = x + dx;
+        int ny = y + dy;
+        
+        // Check if the next state is valid
+        boolean validMove = (nx >= 0 && nx < mundo.width && 
+                            ny >= 0 && ny < mundo.height && 
+                            mundo.grid[nx][ny] != 1);
+        
+        double qValue = 0.0;
+        
+        if (validMove) {
+            // Probability of moving as intended
+            qValue += moveProb * (stepCost + discountFactor * values[nx][ny]);
+            
+            // Probability of staying in place
+            qValue += (1.0 - moveProb) * (stepCost + discountFactor * values[x][y]);
+        } else {
+            // If move not valid, stay in place with probability 1
+            qValue += stepCost + discountFactor * values[x][y];
+        }
+        
+        return qValue;
+    }
+
+    // Implement the automaticAction method to choose the best action based on the current belief state
+    int automaticAction() {
+        // Ensure the value function has been computed
+        if (Vs == null) {
+            valueIteration();
+        }
+        
+        // Find the most likely position of the robot
+        int maxX = 0, maxY = 0;
+        double maxProb = 0.0;
+        for (int x = 0; x < mundo.width; x++) {
+            for (int y = 0; y < mundo.height; y++) {
+                if (probs[x][y] > maxProb) {
+                    maxProb = probs[x][y];
+                    maxX = x;
+                    maxY = y;
+                }
+            }
+        }
+        
+        // Find the action with the highest expected value
+        int bestAction = STAY;
+        double maxExpectedValue = Double.NEGATIVE_INFINITY;
+        
+        for (int action = 0; action < 5; action++) {
+            // Get the intended direction based on the action
+            int dx = 0, dy = 0;
+            switch (action) {
+                case NORTH: dy = -1; break;
+                case SOUTH: dy = 1;  break;
+                case EAST:  dx = 1;  break;
+                case WEST:  dx = -1; break;
+                case STAY:  dx = 0; dy = 0; break;
+            }
+            
+            // Calculate the next state
+            int nx = maxX + dx;
+            int ny = maxY + dy;
+            
+            // Check if the next state is valid
+            if (nx >= 0 && nx < mundo.width && ny >= 0 && ny < mundo.height && mundo.grid[nx][ny] != 1) {
+                // The expected value of taking this action is the value of the next state
+                double expectedValue = Vs[nx][ny];
+                
+                if (expectedValue > maxExpectedValue) {
+                    maxExpectedValue = expectedValue;
+                    bestAction = action;
+                }
+            }
+        }
+        
+        // Debug printout
+        System.out.println("Most likely position: (" + maxX + ", " + maxY + ") with probability " + maxProb);
+        System.out.println("Choosing action: " + bestAction);
+        
+        return bestAction;
     }
     
     void doStuff() {
         int action;
         
-        //valueIteration();  // TODO: function you will write in Part II of the lab
+        valueIteration();  // TODO: function you will write in Part II of the lab
         initializeProbabilities();  // Initializes the location (probability) map
         
         while (true) {
